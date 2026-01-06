@@ -6,8 +6,12 @@ defmodule TermUI.Widgets.LogViewerTest do
   alias TermUI.Widgets.LogViewer
 
   setup do
-    # Start Theme server for color support
-    {:ok, _theme_pid} = Theme.start_link(theme: :dark)
+    # Start Theme server for color support (ignore if already started)
+    case Theme.start_link(theme: :dark) do
+      {:ok, _pid} -> :ok
+      {:error, {:already_started, _pid}} -> :ok
+    end
+
     :ok
   end
 

@@ -10,6 +10,18 @@ defmodule TermUI.Integration.AdvancedWidgetsTest do
   # async: true because widgets are stateless and tests create isolated instances
   use ExUnit.Case, async: true
 
+  alias TermUI.Theme
+
+  setup do
+    # Start Theme server for color support (ignore if already started)
+    case Theme.start_link(theme: :dark) do
+      {:ok, _pid} -> :ok
+      {:error, {:already_started, _pid}} -> :ok
+    end
+
+    :ok
+  end
+
   @default_area %{width: 80, height: 24}
 
   alias TermUI.Component.RenderNode
