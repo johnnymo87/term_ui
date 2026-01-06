@@ -165,6 +165,21 @@ defmodule TermUI.Input do
   @callback poll(state(), timeout :: non_neg_integer()) :: poll_result()
 
   @doc """
+  Create initial state for this input handler.
+
+  Returns a new state value that can be passed to `poll/2` and `mode/1`.
+  This provides a uniform way to initialize handlers without knowing
+  their internal state representation.
+
+  ## Examples
+
+      handler = TermUI.Input.Selector.select(:raw)
+      state = handler.new()
+      {result, new_state} = handler.poll(state, 100)
+  """
+  @callback new() :: state()
+
+  @doc """
   Return the input mode for this handler.
 
   Returns `:raw` or `:tty` to indicate which mode the handler operates in.

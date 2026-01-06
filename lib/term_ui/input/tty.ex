@@ -149,6 +149,7 @@ defmodule TermUI.Input.TTY do
 
       state = TermUI.Input.TTY.new()
   """
+  @impl TermUI.Input
   @spec new() :: t()
   def new do
     %__MODULE__{

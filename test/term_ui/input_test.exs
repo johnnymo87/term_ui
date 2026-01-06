@@ -14,10 +14,11 @@ defmodule TermUI.InputTest do
     test "behaviour_info returns expected callbacks" do
       callbacks = Input.behaviour_info(:callbacks)
 
-      # Should define poll/2 and mode/1 callbacks
+      # Should define new/0, poll/2, and mode/1 callbacks
+      assert {:new, 0} in callbacks
       assert {:poll, 2} in callbacks
       assert {:mode, 1} in callbacks
-      assert length(callbacks) == 2
+      assert length(callbacks) == 3
     end
 
     test "behaviour_info returns optional callbacks (empty)" do
@@ -72,6 +73,9 @@ defmodule TermUI.InputTest do
       defstruct buffer: <<>>, mode: :raw
 
       @impl true
+      def new, do: %__MODULE__{}
+
+      @impl true
       def poll(%__MODULE__{} = state, timeout) do
         # Simulate input handling
         if timeout == 0 do
@@ -122,6 +126,9 @@ defmodule TermUI.InputTest do
     @behaviour TermUI.Input
 
     defstruct call_count: 0
+
+    @impl true
+    def new, do: %__MODULE__{}
 
     @impl true
     def poll(%__MODULE__{call_count: count} = state, _timeout) do

@@ -100,6 +100,7 @@ defmodule TermUI.Input.Raw do
 
       state = TermUI.Input.Raw.new()
   """
+  @impl TermUI.Input
   @spec new() :: t()
   def new do
     %__MODULE__{
