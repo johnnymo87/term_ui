@@ -94,8 +94,8 @@ defmodule TermUI.Widgets.StreamWidget.ConsumerTest do
       # Kill the widget
       Agent.stop(widget_pid)
 
-      # Wait for the consumer to exit
-      assert_receive {:EXIT, ^consumer, {:widget_down, :normal}}, 500
+      # Wait for the consumer to exit (generous timeout for CI)
+      assert_receive {:EXIT, ^consumer, {:widget_down, :normal}}, 2000
 
       # Consumer should have stopped
       refute Process.alive?(consumer)

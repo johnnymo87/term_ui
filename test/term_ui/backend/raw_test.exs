@@ -1429,6 +1429,10 @@ defmodule TermUI.Backend.RawTest do
         {:timeout, _} ->
           # Also acceptable if implementation waits for more input
           :ok
+
+        {:error, :eof, _} ->
+          # Also acceptable - EOF can occur when stdin closes during test
+          :ok
       end
     end
   end

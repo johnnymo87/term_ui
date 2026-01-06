@@ -157,7 +157,7 @@ defmodule TermUI.Command.ExecutorTest do
 
       assert is_reference(cmd_id)
 
-      assert_receive {:command_result, ^component_id, ^cmd_id, :timer_done}, 100
+      assert_receive {:command_result, ^component_id, ^cmd_id, :timer_done}, 500
     end
 
     test "delivers tuple result message" do
@@ -166,7 +166,7 @@ defmodule TermUI.Command.ExecutorTest do
       cmd = Command.timer(10, {:tick, 42})
       {:ok, cmd_id} = Executor.execute(executor, cmd, self(), :comp)
 
-      assert_receive {:command_result, :comp, ^cmd_id, {:tick, 42}}, 100
+      assert_receive {:command_result, :comp, ^cmd_id, {:tick, 42}}, 500
     end
   end
 

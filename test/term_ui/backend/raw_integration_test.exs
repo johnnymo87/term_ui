@@ -217,7 +217,9 @@ defmodule TermUI.Backend.RawIntegrationTest do
     end
 
     test "poll_event returns timeout when no input", %{state: state} do
-      assert {:timeout, _} = Raw.poll_event(state, 0)
+      # Can return timeout or EOF (EOF when stdin closes during test)
+      result = Raw.poll_event(state, 0)
+      assert match?({:timeout, _}, result) or match?({:error, :eof, _}, result)
     end
 
     test "poll_event with buffered input returns events", %{state: state} do

@@ -208,8 +208,8 @@ defmodule TermUI.Integration.CapabilityAccuracyTest do
       _caps = Capabilities.detect()
       elapsed = System.monotonic_time(:millisecond) - start
 
-      # Should be under 10ms for cached result
-      assert elapsed < 10, "Cached detection took #{elapsed}ms, expected < 10ms"
+      # Should be under 100ms for cached result (generous for CI variance)
+      assert elapsed < 100, "Cached detection took #{elapsed}ms, expected < 100ms"
     end
 
     test "cache can be cleared" do

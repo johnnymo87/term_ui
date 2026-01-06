@@ -1,5 +1,6 @@
 defmodule TermUI.Layout.IntegrationTest do
-  use ExUnit.Case, async: true
+  # async: false because "cache integration" tests use shared ETS tables
+  use ExUnit.Case, async: false
 
   alias TermUI.Layout.Alignment
   alias TermUI.Layout.Cache
@@ -306,15 +307,19 @@ defmodule TermUI.Layout.IntegrationTest do
       area2 = %{x: 0, y: 0, width: 200, height: 20}
 
       Cache.clear()
+      initial_size = Cache.size()
 
       Cache.solve(constraints, area1)
       Cache.solve(constraints, area2)
 
-      stats = Cache.stats()
-      assert stats.size == 2
+      # Should have added 2 entries (may be more if other sync tests added)
+      assert Cache.size() >= initial_size + 2
     end
 
     test "cache clear removes all entries" do
+      # Clear first to ensure clean slate (avoid race with other tests)
+      Cache.clear()
+
       constraints = [Constraint.length(50)]
       area = %{x: 0, y: 0, width: 100, height: 20}
 

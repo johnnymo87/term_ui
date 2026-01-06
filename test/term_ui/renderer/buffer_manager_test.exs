@@ -29,7 +29,15 @@ defmodule TermUI.Renderer.BufferManagerTest do
   describe "get_current_buffer/1" do
     setup do
       {:ok, pid} = BufferManager.start_link(rows: 5, cols: 10, name: :test_current)
-      on_exit(fn -> if Process.alive?(pid), do: GenServer.stop(pid) end)
+      on_exit(fn ->
+        if Process.alive?(pid) do
+          try do
+            GenServer.stop(pid, :normal, 100)
+          catch
+            :exit, _ -> :ok
+          end
+        end
+      end)
       %{server: :test_current}
     end
 
@@ -53,7 +61,15 @@ defmodule TermUI.Renderer.BufferManagerTest do
   describe "get_previous_buffer/1" do
     setup do
       {:ok, pid} = BufferManager.start_link(rows: 5, cols: 10, name: :test_previous)
-      on_exit(fn -> if Process.alive?(pid), do: GenServer.stop(pid) end)
+      on_exit(fn ->
+        if Process.alive?(pid) do
+          try do
+            GenServer.stop(pid, :normal, 100)
+          catch
+            :exit, _ -> :ok
+          end
+        end
+      end)
       %{server: :test_previous}
     end
 
@@ -75,7 +91,15 @@ defmodule TermUI.Renderer.BufferManagerTest do
   describe "swap_buffers/1" do
     setup do
       {:ok, pid} = BufferManager.start_link(rows: 5, cols: 10, name: :test_swap)
-      on_exit(fn -> if Process.alive?(pid), do: GenServer.stop(pid) end)
+      on_exit(fn ->
+        if Process.alive?(pid) do
+          try do
+            GenServer.stop(pid, :normal, 100)
+          catch
+            :exit, _ -> :ok
+          end
+        end
+      end)
       %{server: :test_swap}
     end
 
@@ -117,7 +141,15 @@ defmodule TermUI.Renderer.BufferManagerTest do
   describe "dimensions/1" do
     test "returns buffer dimensions" do
       {:ok, pid} = BufferManager.start_link(rows: 24, cols: 80, name: :test_dims)
-      on_exit(fn -> if Process.alive?(pid), do: GenServer.stop(pid) end)
+      on_exit(fn ->
+        if Process.alive?(pid) do
+          try do
+            GenServer.stop(pid, :normal, 100)
+          catch
+            :exit, _ -> :ok
+          end
+        end
+      end)
 
       assert {24, 80} = BufferManager.dimensions(:test_dims)
     end
@@ -126,7 +158,15 @@ defmodule TermUI.Renderer.BufferManagerTest do
   describe "resize/3" do
     setup do
       {:ok, pid} = BufferManager.start_link(rows: 10, cols: 10, name: :test_resize)
-      on_exit(fn -> if Process.alive?(pid), do: GenServer.stop(pid) end)
+      on_exit(fn ->
+        if Process.alive?(pid) do
+          try do
+            GenServer.stop(pid, :normal, 100)
+          catch
+            :exit, _ -> :ok
+          end
+        end
+      end)
       %{server: :test_resize}
     end
 
@@ -176,7 +216,15 @@ defmodule TermUI.Renderer.BufferManagerTest do
   describe "clear operations" do
     setup do
       {:ok, pid} = BufferManager.start_link(rows: 10, cols: 10, name: :test_clear)
-      on_exit(fn -> if Process.alive?(pid), do: GenServer.stop(pid) end)
+      on_exit(fn ->
+        if Process.alive?(pid) do
+          try do
+            GenServer.stop(pid, :normal, 100)
+          catch
+            :exit, _ -> :ok
+          end
+        end
+      end)
 
       # Write some content
       buffer = BufferManager.get_current_buffer(:test_clear)
@@ -232,7 +280,15 @@ defmodule TermUI.Renderer.BufferManagerTest do
   describe "dirty flag" do
     setup do
       {:ok, pid} = BufferManager.start_link(rows: 5, cols: 5, name: :test_dirty)
-      on_exit(fn -> if Process.alive?(pid), do: GenServer.stop(pid) end)
+      on_exit(fn ->
+        if Process.alive?(pid) do
+          try do
+            GenServer.stop(pid, :normal, 100)
+          catch
+            :exit, _ -> :ok
+          end
+        end
+      end)
       %{server: :test_dirty}
     end
 
@@ -262,7 +318,15 @@ defmodule TermUI.Renderer.BufferManagerTest do
   describe "convenience functions" do
     setup do
       {:ok, pid} = BufferManager.start_link(rows: 10, cols: 20, name: :test_convenience)
-      on_exit(fn -> if Process.alive?(pid), do: GenServer.stop(pid) end)
+      on_exit(fn ->
+        if Process.alive?(pid) do
+          try do
+            GenServer.stop(pid, :normal, 100)
+          catch
+            :exit, _ -> :ok
+          end
+        end
+      end)
       %{server: :test_convenience}
     end
 
@@ -310,7 +374,15 @@ defmodule TermUI.Renderer.BufferManagerTest do
   describe "concurrent writes" do
     setup do
       {:ok, pid} = BufferManager.start_link(rows: 100, cols: 100, name: :test_concurrent)
-      on_exit(fn -> if Process.alive?(pid), do: GenServer.stop(pid) end)
+      on_exit(fn ->
+        if Process.alive?(pid) do
+          try do
+            GenServer.stop(pid, :normal, 100)
+          catch
+            :exit, _ -> :ok
+          end
+        end
+      end)
       %{server: :test_concurrent}
     end
 
@@ -432,7 +504,15 @@ defmodule TermUI.Renderer.BufferManagerTest do
   describe "integration scenarios" do
     setup do
       {:ok, pid} = BufferManager.start_link(rows: 24, cols: 80, name: :test_integration)
-      on_exit(fn -> if Process.alive?(pid), do: GenServer.stop(pid) end)
+      on_exit(fn ->
+        if Process.alive?(pid) do
+          try do
+            GenServer.stop(pid, :normal, 100)
+          catch
+            :exit, _ -> :ok
+          end
+        end
+      end)
       %{server: :test_integration}
     end
 

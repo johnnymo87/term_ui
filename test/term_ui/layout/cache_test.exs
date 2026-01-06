@@ -6,7 +6,15 @@ defmodule TermUI.Layout.CacheTest do
   setup do
     # Start cache for each test with small size for testing eviction
     {:ok, pid} = Cache.start_link(max_size: 10, eviction_count: 3, name: :test_cache)
-    on_exit(fn -> if Process.alive?(pid), do: GenServer.stop(pid) end)
+    on_exit(fn ->
+      if Process.alive?(pid) do
+        try do
+          GenServer.stop(pid, :normal, 100)
+        catch
+          :exit, _ -> :ok
+        end
+      end
+    end)
     :ok
   end
 

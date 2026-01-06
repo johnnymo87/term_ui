@@ -11,7 +11,13 @@ defmodule TermUI.Runtime.NodeRendererTest do
     {:ok, pid} = BufferManager.start_link(rows: 30, cols: 50, name: name)
 
     on_exit(fn ->
-      if Process.alive?(pid), do: GenServer.stop(pid)
+      if Process.alive?(pid) do
+        try do
+          GenServer.stop(pid, :normal, 100)
+        catch
+          :exit, _ -> :ok
+        end
+      end
     end)
 
     {:ok, bm: pid}

@@ -145,7 +145,7 @@ defmodule TermUI.Integration.InputAbstractionTest do
         assert {:ok, tty_event} = tty_result, "TTY failed to parse #{description}"
 
         # Events should be identical
-        assert raw_event == tty_event, "#{description} events differ"
+        assert events_equivalent?(raw_event, tty_event), "#{description} events differ"
 
         # Verify it's the correct key
         assert raw_event.key == expected_key, "#{description} has wrong key"
@@ -164,7 +164,7 @@ defmodule TermUI.Integration.InputAbstractionTest do
       assert {:ok, tty_event} = tty_result
 
       # Events should be identical
-      assert raw_event == tty_event
+      assert events_equivalent?(raw_event, tty_event)
 
       # Should be enter key
       assert raw_event.key == :enter
@@ -182,7 +182,7 @@ defmodule TermUI.Integration.InputAbstractionTest do
       assert {:ok, tty_event} = tty_result
 
       # Events should be identical
-      assert raw_event == tty_event
+      assert events_equivalent?(raw_event, tty_event)
 
       # Should be tab key
       assert raw_event.key == :tab
@@ -202,8 +202,8 @@ defmodule TermUI.Integration.InputAbstractionTest do
         assert {:ok, raw_event} = raw_result, "Raw failed to parse '#{char}'"
         assert {:ok, tty_event} = tty_result, "TTY failed to parse '#{char}'"
 
-        # Events should be identical
-        assert raw_event == tty_event, "'#{char}' events differ"
+        # Events should be identical (except timestamp which varies)
+        assert events_equivalent?(raw_event, tty_event), "'#{char}' events differ"
 
         # Should have the character as the key
         assert raw_event.key == char
@@ -230,7 +230,7 @@ defmodule TermUI.Integration.InputAbstractionTest do
         assert {:ok, raw_event} = raw_result
         assert {:ok, tty_event} = tty_result
 
-        assert raw_event == tty_event
+        assert events_equivalent?(raw_event, tty_event)
         assert raw_event.key == expected_key
       end
     end
@@ -242,7 +242,7 @@ defmodule TermUI.Integration.InputAbstractionTest do
       raw_event = Event.key(:escape)
       tty_event = Event.key(:escape)
 
-      assert raw_event == tty_event
+      assert events_equivalent?(raw_event, tty_event)
       assert raw_event.key == :escape
     end
 
@@ -257,7 +257,7 @@ defmodule TermUI.Integration.InputAbstractionTest do
       assert {:ok, raw_event} = raw_result
       assert {:ok, tty_event} = tty_result
 
-      assert raw_event == tty_event
+      assert events_equivalent?(raw_event, tty_event)
       assert raw_event.key == :backspace
     end
 
@@ -277,7 +277,7 @@ defmodule TermUI.Integration.InputAbstractionTest do
         assert {:ok, raw_event} = raw_result
         assert {:ok, tty_event} = tty_result
 
-        assert raw_event == tty_event
+        assert events_equivalent?(raw_event, tty_event)
         assert raw_event.key == expected_key
       end
     end
@@ -512,5 +512,12 @@ defmodule TermUI.Integration.InputAbstractionTest do
       {:ok, :eof} -> :eof
       nil -> :timeout
     end
+  end
+
+  # Compare events ignoring timestamp (which varies between calls)
+  defp events_equivalent?(event1, event2) do
+    event1.key == event2.key and
+      event1.char == event2.char and
+      event1.modifiers == event2.modifiers
   end
 end
