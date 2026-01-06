@@ -57,10 +57,25 @@ defmodule TermUI.Capabilities do
   Detects terminal capabilities and caches them in ETS.
 
   Returns the detected capabilities struct.
+
+  ## Options
+
+  Accepts an optional env map for testing purposes. When provided,
+  environment variables are read from the map instead of System.get_env.
+  Keys should be strings like `"TERM"`, `"COLORTERM"`, etc.
+
+  ## Examples
+
+      # Normal usage (reads from system environment)
+      Capabilities.detect()
+
+      # Testing usage (reads from provided map)
+      Capabilities.detect(%{"TERM" => "xterm-256color", "COLORTERM" => "truecolor"})
+
   """
-  @spec detect() :: t()
-  def detect do
-    capabilities = do_detect()
+  @spec detect(map()) :: t()
+  def detect(env \\ %{}) do
+    capabilities = do_detect(env)
     cache_capabilities(capabilities)
     capabilities
   end
@@ -168,7 +183,7 @@ defmodule TermUI.Capabilities do
 
   # Private implementation
 
-  defp do_detect do
+  defp do_detect(env) do
     # Start with VT100 baseline
     base = %__MODULE__{
       color_mode: :color_16,
@@ -183,16 +198,27 @@ defmodule TermUI.Capabilities do
     }
 
     base
-    |> detect_from_term()
-    |> detect_from_colorterm()
-    |> detect_from_term_program()
-    |> detect_unicode()
-    |> detect_from_terminfo()
+    |> detect_from_term(env)
+    |> detect_from_colorterm(env)
+    |> detect_from_term_program(env)
+    |> detect_unicode(env)
+    |> detect_from_terminfo(env)
     |> finalize_capabilities()
   end
 
-  defp detect_from_term(caps) do
-    case System.get_env("TERM") do
+  # Helper to get environment variable
+  # When env map is empty, reads from System.get_env (normal operation)
+  # When env map is non-empty, uses ONLY the map (test isolation)
+  defp get_env(env, key) when env == %{} do
+    System.get_env(key)
+  end
+
+  defp get_env(env, key) do
+    Map.get(env, key)
+  end
+
+  defp detect_from_term(caps, env) do
+    case get_env(env, "TERM") do
       nil ->
         caps
 
@@ -240,8 +266,8 @@ defmodule TermUI.Capabilities do
     end
   end
 
-  defp detect_from_colorterm(caps) do
-    case System.get_env("COLORTERM") do
+  defp detect_from_colorterm(caps, env) do
+    case get_env(env, "COLORTERM") do
       nil ->
         caps
 
@@ -254,8 +280,8 @@ defmodule TermUI.Capabilities do
     end
   end
 
-  defp detect_from_term_program(caps) do
-    case System.get_env("TERM_PROGRAM") do
+  defp detect_from_term_program(caps, env) do
+    case get_env(env, "TERM_PROGRAM") do
       nil ->
         caps
 
@@ -283,8 +309,8 @@ defmodule TermUI.Capabilities do
     end
   end
 
-  defp detect_unicode(caps) do
-    lang = System.get_env("LC_ALL") || System.get_env("LC_CTYPE") || System.get_env("LANG") || ""
+  defp detect_unicode(caps, env) do
+    lang = get_env(env, "LC_ALL") || get_env(env, "LC_CTYPE") || get_env(env, "LANG") || ""
 
     unicode =
       String.contains?(String.downcase(lang), "utf-8") or
@@ -293,7 +319,10 @@ defmodule TermUI.Capabilities do
     %{caps | unicode: unicode}
   end
 
-  defp detect_from_terminfo(caps) do
+  # Skip terminfo detection when env map is provided (for test isolation)
+  defp detect_from_terminfo(caps, env) when env != %{}, do: caps
+
+  defp detect_from_terminfo(caps, _env) do
     case query_terminfo_colors() do
       {:ok, colors} when colors >= 16_777_216 ->
         update_color_mode(caps, :true_color, colors)

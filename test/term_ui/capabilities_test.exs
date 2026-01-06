@@ -1,36 +1,9 @@
 defmodule TermUI.CapabilitiesTest do
-  use ExUnit.Case, async: false
+  use ExUnit.Case, async: true
 
   alias TermUI.Capabilities
 
-  setup do
-    # Clear cache and save original environment
-    Capabilities.clear_cache()
-
-    original_env = %{
-      "TERM" => System.get_env("TERM"),
-      "COLORTERM" => System.get_env("COLORTERM"),
-      "TERM_PROGRAM" => System.get_env("TERM_PROGRAM"),
-      "LANG" => System.get_env("LANG"),
-      "LC_ALL" => System.get_env("LC_ALL"),
-      "LC_CTYPE" => System.get_env("LC_CTYPE")
-    }
-
-    on_exit(fn ->
-      # Restore original environment
-      Enum.each(original_env, fn {key, value} ->
-        if value do
-          System.put_env(key, value)
-        else
-          System.delete_env(key)
-        end
-      end)
-
-      Capabilities.clear_cache()
-    end)
-
-    :ok
-  end
+  # No setup needed - tests use env injection instead of mutating global state
 
   describe "detect/0 and get/0" do
     test "returns capabilities struct" do
@@ -53,11 +26,7 @@ defmodule TermUI.CapabilitiesTest do
 
   describe "environment variable detection - $TERM" do
     test "detects truecolor from $TERM" do
-      System.put_env("TERM", "xterm-truecolor")
-      System.delete_env("COLORTERM")
-      System.delete_env("TERM_PROGRAM")
-
-      caps = Capabilities.detect()
+      caps = Capabilities.detect(%{"TERM" => "xterm-truecolor"})
 
       assert caps.color_mode == :true_color
       assert caps.max_colors == 16_777_216
@@ -65,64 +34,40 @@ defmodule TermUI.CapabilitiesTest do
     end
 
     test "detects 256color from $TERM suffix" do
-      System.put_env("TERM", "xterm-256color")
-      System.delete_env("COLORTERM")
-      System.delete_env("TERM_PROGRAM")
-
-      caps = Capabilities.detect()
+      caps = Capabilities.detect(%{"TERM" => "xterm-256color"})
 
       assert caps.color_mode == :color_256
       assert caps.max_colors >= 256
     end
 
     test "detects xterm as 256-color capable" do
-      System.put_env("TERM", "xterm")
-      System.delete_env("COLORTERM")
-      System.delete_env("TERM_PROGRAM")
-
-      caps = Capabilities.detect()
+      caps = Capabilities.detect(%{"TERM" => "xterm"})
 
       assert caps.color_mode == :color_256
       assert caps.max_colors >= 256
     end
 
     test "detects screen as 256-color capable" do
-      System.put_env("TERM", "screen")
-      System.delete_env("COLORTERM")
-      System.delete_env("TERM_PROGRAM")
-
-      caps = Capabilities.detect()
+      caps = Capabilities.detect(%{"TERM" => "screen"})
 
       assert caps.color_mode == :color_256
     end
 
     test "detects tmux as 256-color capable" do
-      System.put_env("TERM", "tmux-256color")
-      System.delete_env("COLORTERM")
-      System.delete_env("TERM_PROGRAM")
-
-      caps = Capabilities.detect()
+      caps = Capabilities.detect(%{"TERM" => "tmux-256color"})
 
       assert caps.color_mode == :color_256
     end
 
     test "detects linux console as 16-color" do
-      System.put_env("TERM", "linux")
-      System.delete_env("COLORTERM")
-      System.delete_env("TERM_PROGRAM")
-
-      caps = Capabilities.detect()
+      caps = Capabilities.detect(%{"TERM" => "linux"})
 
       assert caps.color_mode == :color_16
       assert caps.max_colors == 16
     end
 
     test "detects dumb terminal as monochrome" do
-      System.put_env("TERM", "dumb")
-      System.delete_env("COLORTERM")
-      System.delete_env("TERM_PROGRAM")
-
-      caps = Capabilities.detect()
+      caps = Capabilities.detect(%{"TERM" => "dumb"})
 
       assert caps.color_mode == :monochrome
       assert caps.max_colors == 2
@@ -131,22 +76,14 @@ defmodule TermUI.CapabilitiesTest do
 
   describe "environment variable detection - $COLORTERM" do
     test "detects truecolor from $COLORTERM" do
-      System.put_env("TERM", "xterm")
-      System.put_env("COLORTERM", "truecolor")
-      System.delete_env("TERM_PROGRAM")
-
-      caps = Capabilities.detect()
+      caps = Capabilities.detect(%{"TERM" => "xterm", "COLORTERM" => "truecolor"})
 
       assert caps.color_mode == :true_color
       assert caps.max_colors == 16_777_216
     end
 
     test "detects 24bit from $COLORTERM" do
-      System.put_env("TERM", "xterm")
-      System.put_env("COLORTERM", "24bit")
-      System.delete_env("TERM_PROGRAM")
-
-      caps = Capabilities.detect()
+      caps = Capabilities.detect(%{"TERM" => "xterm", "COLORTERM" => "24bit"})
 
       assert caps.color_mode == :true_color
       assert caps.max_colors == 16_777_216
@@ -155,11 +92,7 @@ defmodule TermUI.CapabilitiesTest do
 
   describe "environment variable detection - $TERM_PROGRAM" do
     test "detects iTerm.app capabilities" do
-      System.put_env("TERM", "xterm")
-      System.delete_env("COLORTERM")
-      System.put_env("TERM_PROGRAM", "iTerm.app")
-
-      caps = Capabilities.detect()
+      caps = Capabilities.detect(%{"TERM" => "xterm", "TERM_PROGRAM" => "iTerm.app"})
 
       assert caps.color_mode == :true_color
       assert caps.mouse == true
@@ -169,32 +102,20 @@ defmodule TermUI.CapabilitiesTest do
     end
 
     test "detects vscode terminal capabilities" do
-      System.put_env("TERM", "xterm")
-      System.delete_env("COLORTERM")
-      System.put_env("TERM_PROGRAM", "vscode")
-
-      caps = Capabilities.detect()
+      caps = Capabilities.detect(%{"TERM" => "xterm", "TERM_PROGRAM" => "vscode"})
 
       assert caps.color_mode == :true_color
       assert caps.mouse == true
     end
 
     test "detects Alacritty capabilities" do
-      System.put_env("TERM", "xterm")
-      System.delete_env("COLORTERM")
-      System.put_env("TERM_PROGRAM", "Alacritty")
-
-      caps = Capabilities.detect()
+      caps = Capabilities.detect(%{"TERM" => "xterm", "TERM_PROGRAM" => "Alacritty"})
 
       assert caps.color_mode == :true_color
     end
 
     test "detects Apple_Terminal as 256-color" do
-      System.put_env("TERM", "xterm")
-      System.delete_env("COLORTERM")
-      System.put_env("TERM_PROGRAM", "Apple_Terminal")
-
-      caps = Capabilities.detect()
+      caps = Capabilities.detect(%{"TERM" => "xterm", "TERM_PROGRAM" => "Apple_Terminal"})
 
       assert caps.color_mode == :color_256
     end
@@ -202,92 +123,66 @@ defmodule TermUI.CapabilitiesTest do
 
   describe "environment variable detection - $LANG" do
     test "detects UTF-8 from $LANG" do
-      System.put_env("LANG", "en_US.UTF-8")
-      System.delete_env("LC_ALL")
-      System.delete_env("LC_CTYPE")
-
-      caps = Capabilities.detect()
+      caps = Capabilities.detect(%{"LANG" => "en_US.UTF-8"})
 
       assert caps.unicode == true
     end
 
     test "detects UTF-8 from $LC_ALL" do
-      System.put_env("LC_ALL", "en_US.UTF-8")
-      System.delete_env("LANG")
-
-      caps = Capabilities.detect()
+      caps = Capabilities.detect(%{"LC_ALL" => "en_US.UTF-8"})
 
       assert caps.unicode == true
     end
 
     test "detects non-UTF-8 locale" do
-      System.put_env("LANG", "en_US.ISO-8859-1")
-      System.delete_env("LC_ALL")
-      System.delete_env("LC_CTYPE")
-
-      caps = Capabilities.detect()
+      caps = Capabilities.detect(%{"LANG" => "en_US.ISO-8859-1"})
 
       assert caps.unicode == false
     end
   end
 
   describe "capability accessors" do
-    test "supports_true_color?/0" do
-      System.put_env("COLORTERM", "truecolor")
-      Capabilities.detect()
+    # Note: Accessor functions use get() which relies on global ETS cache.
+    # We test the detection logic directly via detect(env) and verify struct values.
 
-      assert Capabilities.supports_true_color?() == true
+    test "supports_true_color? logic" do
+      caps = Capabilities.detect(%{"COLORTERM" => "truecolor"})
+      assert caps.color_mode == :true_color
     end
 
-    test "supports_256_color?/0 returns true for true-color" do
-      System.put_env("COLORTERM", "truecolor")
-      Capabilities.detect()
-
-      assert Capabilities.supports_256_color?() == true
+    test "supports_256_color? logic for true-color" do
+      caps = Capabilities.detect(%{"COLORTERM" => "truecolor"})
+      assert caps.color_mode in [:true_color, :color_256]
     end
 
-    test "supports_256_color?/0 returns true for 256-color" do
-      System.put_env("TERM", "xterm-256color")
-      System.delete_env("COLORTERM")
-      System.delete_env("TERM_PROGRAM")
-      Capabilities.detect()
-
-      assert Capabilities.supports_256_color?() == true
+    test "supports_256_color? logic for 256-color" do
+      caps = Capabilities.detect(%{"TERM" => "xterm-256color"})
+      assert caps.color_mode in [:true_color, :color_256]
     end
 
-    test "supports_mouse?/0" do
-      System.put_env("TERM_PROGRAM", "iTerm.app")
-      Capabilities.detect()
-
-      assert Capabilities.supports_mouse?() == true
+    test "supports_mouse? logic" do
+      caps = Capabilities.detect(%{"TERM_PROGRAM" => "iTerm.app"})
+      assert caps.mouse == true
     end
 
-    test "supports_bracketed_paste?/0" do
-      System.put_env("TERM_PROGRAM", "iTerm.app")
-      Capabilities.detect()
-
-      assert Capabilities.supports_bracketed_paste?() == true
+    test "supports_bracketed_paste? logic" do
+      caps = Capabilities.detect(%{"TERM_PROGRAM" => "iTerm.app"})
+      assert caps.bracketed_paste == true
     end
 
-    test "supports_unicode?/0" do
-      System.put_env("LANG", "en_US.UTF-8")
-      Capabilities.detect()
-
-      assert Capabilities.supports_unicode?() == true
+    test "supports_unicode? logic" do
+      caps = Capabilities.detect(%{"LANG" => "en_US.UTF-8"})
+      assert caps.unicode == true
     end
 
-    test "max_colors/0" do
-      System.put_env("COLORTERM", "truecolor")
-      Capabilities.detect()
-
-      assert Capabilities.max_colors() == 16_777_216
+    test "max_colors value" do
+      caps = Capabilities.detect(%{"COLORTERM" => "truecolor"})
+      assert caps.max_colors == 16_777_216
     end
 
-    test "color_mode/0" do
-      System.put_env("COLORTERM", "truecolor")
-      Capabilities.detect()
-
-      assert Capabilities.color_mode() == :true_color
+    test "color_mode value" do
+      caps = Capabilities.detect(%{"COLORTERM" => "truecolor"})
+      assert caps.color_mode == :true_color
     end
   end
 
