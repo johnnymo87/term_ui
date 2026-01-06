@@ -2,7 +2,6 @@ defmodule TermUI.Widgets.SupervisionTreeViewerTest do
   use ExUnit.Case, async: false
 
   alias TermUI.Event
-  alias TermUI.Theme
   alias TermUI.Widgets.SupervisionTreeViewer
 
   @area %{x: 0, y: 0, width: 100, height: 30}
@@ -77,16 +76,7 @@ defmodule TermUI.Widgets.SupervisionTreeViewerTest do
     end
   end
 
-  setup do
-    # Start Theme server for color support (ignore if already started)
-    case Theme.start_link(theme: :dark) do
-      {:ok, _pid} -> :ok
-      {:error, {:already_started, _pid}} -> :ok
-    end
-
-    # Each test will start its own supervisor
-    :ok
-  end
+  # Theme is started globally in test_helper.exs
 
   describe "new/1" do
     test "creates props with required root" do

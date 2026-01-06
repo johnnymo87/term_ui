@@ -14,4 +14,14 @@ excludes =
     [:requires_terminal]
   end
 
+# Start Theme server under a supervisor so it survives test process shutdowns.
+# This prevents flaky failures where async tests race with Theme's ETS table
+# being deleted when the test process that started it exits.
+{:ok, _sup} =
+  Supervisor.start_link(
+    [{TermUI.Theme, [theme: :dark, name: TermUI.Theme]}],
+    strategy: :one_for_one,
+    name: TermUI.TestSupport.Supervisor
+  )
+
 ExUnit.start(exclude: excludes)
