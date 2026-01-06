@@ -98,6 +98,8 @@ defmodule TermUI.Layout.Cache do
   Returns `{:ok, result}` if found, `:miss` otherwise.
   """
   def lookup(key) do
+    ensure_tables_exist()
+
     case :ets.lookup(@table, key) do
       [{^key, result, _access_time}] ->
         # Update access time
@@ -115,6 +117,7 @@ defmodule TermUI.Layout.Cache do
   Triggers eviction if cache exceeds max size.
   """
   def insert(key, result) do
+    ensure_tables_exist()
     now = current_time()
     :ets.insert(@table, {key, result, now})
     maybe_evict()
@@ -125,6 +128,7 @@ defmodule TermUI.Layout.Cache do
   Invalidates a specific cache entry.
   """
   def invalidate(key) do
+    ensure_tables_exist()
     :ets.delete(@table, key)
     :ok
   end
@@ -135,6 +139,7 @@ defmodule TermUI.Layout.Cache do
   Useful when a component's constraints change.
   """
   def invalidate_constraints(constraints) do
+    ensure_tables_exist()
     hash = constraint_hash(constraints)
 
     # Find and delete all entries with this constraint hash
@@ -151,6 +156,7 @@ defmodule TermUI.Layout.Cache do
   Call this on terminal resize.
   """
   def clear do
+    ensure_tables_exist()
     :ets.delete_all_objects(@table)
     :ok
   end
@@ -167,6 +173,7 @@ defmodule TermUI.Layout.Cache do
   - `:hit_rate` - hits / (hits + misses)
   """
   def stats do
+    ensure_tables_exist()
     size = :ets.info(@table, :size)
 
     [{_, hits}] = :ets.lookup(@stats_table, :hits)
@@ -193,6 +200,7 @@ defmodule TermUI.Layout.Cache do
   Resets cache statistics.
   """
   def reset_stats do
+    ensure_tables_exist()
     :ets.insert(@stats_table, {:hits, 0})
     :ets.insert(@stats_table, {:misses, 0})
     :ok
@@ -219,6 +227,7 @@ defmodule TermUI.Layout.Cache do
   Returns the current cache size.
   """
   def size do
+    ensure_tables_exist()
     :ets.info(@table, :size)
   end
 
@@ -279,6 +288,23 @@ defmodule TermUI.Layout.Cache do
 
   # Private functions
 
+  # Ensures the ETS tables exist, creating them if needed.
+  # This handles the case where the GenServer has terminated but
+  # client code still tries to use the cache.
+  defp ensure_tables_exist do
+    if :ets.whereis(@table) == :undefined do
+      :ets.new(@table, [:set, :public, :named_table, read_concurrency: true])
+    end
+
+    if :ets.whereis(@stats_table) == :undefined do
+      :ets.new(@stats_table, [:set, :public, :named_table])
+      :ets.insert(@stats_table, {:hits, 0})
+      :ets.insert(@stats_table, {:misses, 0})
+    end
+
+    :ok
+  end
+
   defp cache_key(constraints, area) do
     hash = constraint_hash(constraints)
     {hash, area.width, area.height}
@@ -293,14 +319,17 @@ defmodule TermUI.Layout.Cache do
   end
 
   defp increment_hits do
+    ensure_tables_exist()
     :ets.update_counter(@stats_table, :hits, 1)
   end
 
   defp increment_misses do
+    ensure_tables_exist()
     :ets.update_counter(@stats_table, :misses, 1)
   end
 
   defp maybe_evict do
+    ensure_tables_exist()
     current_size = :ets.info(@table, :size)
     config = get_config()
 
