@@ -2,6 +2,7 @@ defmodule TermUI.Input.LineReaderTest do
   use ExUnit.Case, async: true
 
   alias TermUI.Input.LineReader
+  import TermUI.Test.AssertionHelpers
 
   # Note: Testing IO.gets directly is tricky because it reads from stdin.
   # These tests use ExUnit's capture_io to simulate input.
@@ -20,8 +21,8 @@ defmodule TermUI.Input.LineReaderTest do
 
   describe "read_line/1" do
     test "function exists with arity 0 and 1" do
-      assert function_exported?(LineReader, :read_line, 0)
-      assert function_exported?(LineReader, :read_line, 1)
+      assert_function_exported(LineReader, :read_line, 0)
+      assert_function_exported(LineReader, :read_line, 1)
     end
 
     test "returns {:ok, line} without prompt" do
@@ -57,7 +58,7 @@ defmodule TermUI.Input.LineReaderTest do
 
   describe "read_line/2 with validation" do
     test "function exists with arity 2" do
-      assert function_exported?(LineReader, :read_line, 2)
+      assert_function_exported(LineReader, :read_line, 2)
     end
 
     test "returns {:ok, line} when validator returns :ok" do

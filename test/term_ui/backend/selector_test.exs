@@ -3,6 +3,7 @@ defmodule TermUI.Backend.SelectorTest do
 
   alias TermUI.Backend.Selector
   import TermUI.Backend.SelectorTestHelpers
+  import TermUI.Test.AssertionHelpers
 
   describe "module structure" do
     test "module compiles successfully" do
@@ -10,11 +11,11 @@ defmodule TermUI.Backend.SelectorTest do
     end
 
     test "module exports select/0" do
-      assert function_exported?(Selector, :select, 0)
+      assert_function_exported(Selector, :select, 0)
     end
 
     test "module exports select/1" do
-      assert function_exported?(Selector, :select, 1)
+      assert_function_exported(Selector, :select, 1)
     end
   end
 
@@ -294,7 +295,7 @@ defmodule TermUI.Backend.SelectorTest do
 
     test "function exports attempt_raw_mode for testability" do
       # attempt_raw_mode is exported (doc false) to allow testing the core logic
-      assert function_exported?(Selector, :attempt_raw_mode, 0)
+      assert_function_exported(Selector, :attempt_raw_mode, 0)
     end
   end
 

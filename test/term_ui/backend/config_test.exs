@@ -2,6 +2,7 @@ defmodule TermUI.Backend.ConfigTest do
   use ExUnit.Case, async: false
 
   alias TermUI.Backend.Config
+  import TermUI.Test.AssertionHelpers
 
   # Note: async: false because we modify Application env
 
@@ -41,11 +42,13 @@ defmodule TermUI.Backend.ConfigTest do
     end
 
     test "exports expected functions" do
-      assert function_exported?(Config, :get_backend, 0)
-      assert function_exported?(Config, :get_character_set, 0)
-      assert function_exported?(Config, :get_fallback_character_set, 0)
-      assert function_exported?(Config, :get_tty_opts, 0)
-      assert function_exported?(Config, :get_raw_opts, 0)
+      assert_functions_exported(Config, [
+        {:get_backend, 0},
+        {:get_character_set, 0},
+        {:get_fallback_character_set, 0},
+        {:get_tty_opts, 0},
+        {:get_raw_opts, 0}
+      ])
     end
   end
 

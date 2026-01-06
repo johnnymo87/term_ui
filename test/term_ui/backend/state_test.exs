@@ -2,6 +2,7 @@ defmodule TermUI.Backend.StateTest do
   use ExUnit.Case, async: true
 
   alias TermUI.Backend.State
+  import TermUI.Test.AssertionHelpers
 
   describe "module structure" do
     test "module compiles successfully" do
@@ -9,8 +10,10 @@ defmodule TermUI.Backend.StateTest do
     end
 
     test "defines a struct" do
-      assert function_exported?(State, :__struct__, 0)
-      assert function_exported?(State, :__struct__, 1)
+      assert_functions_exported(State, [
+        {:__struct__, 0},
+        {:__struct__, 1}
+      ])
     end
   end
 

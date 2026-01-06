@@ -4,6 +4,7 @@ defmodule TermUI.Input.TTYTest do
   alias TermUI.Input.TTY
   alias TermUI.Input
   alias TermUI.Event
+  import TermUI.Test.AssertionHelpers
 
   describe "behaviour implementation" do
     test "module implements TermUI.Input behaviour" do
@@ -13,11 +14,11 @@ defmodule TermUI.Input.TTYTest do
     end
 
     test "poll/2 callback is implemented" do
-      assert function_exported?(TTY, :poll, 2)
+      assert_function_exported(TTY, :poll, 2)
     end
 
     test "mode/1 callback is implemented" do
-      assert function_exported?(TTY, :mode, 1)
+      assert_function_exported(TTY, :mode, 1)
     end
   end
 

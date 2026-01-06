@@ -2,6 +2,7 @@ defmodule TermUI.BackendTest do
   use ExUnit.Case, async: true
 
   alias TermUI.Backend
+  import TermUI.Test.AssertionHelpers
 
   describe "module structure" do
     test "module compiles successfully" do
@@ -9,7 +10,7 @@ defmodule TermUI.BackendTest do
     end
 
     test "module defines a behaviour" do
-      assert function_exported?(Backend, :behaviour_info, 1)
+      assert_function_exported(Backend, :behaviour_info, 1)
     end
 
     test "behaviour_info(:callbacks) returns expected callbacks" do
@@ -188,16 +189,18 @@ defmodule TermUI.BackendTest do
 
     test "test backend implements all callbacks" do
       # If it compiles with @behaviour and @impl true, all callbacks are implemented
-      assert function_exported?(TestBackend, :init, 1)
-      assert function_exported?(TestBackend, :shutdown, 1)
-      assert function_exported?(TestBackend, :size, 1)
-      assert function_exported?(TestBackend, :move_cursor, 2)
-      assert function_exported?(TestBackend, :hide_cursor, 1)
-      assert function_exported?(TestBackend, :show_cursor, 1)
-      assert function_exported?(TestBackend, :clear, 1)
-      assert function_exported?(TestBackend, :draw_cells, 2)
-      assert function_exported?(TestBackend, :flush, 1)
-      assert function_exported?(TestBackend, :poll_event, 2)
+      assert_functions_exported(TestBackend, [
+        {:init, 1},
+        {:shutdown, 1},
+        {:size, 1},
+        {:move_cursor, 2},
+        {:hide_cursor, 1},
+        {:show_cursor, 1},
+        {:clear, 1},
+        {:draw_cells, 2},
+        {:flush, 1},
+        {:poll_event, 2}
+      ])
     end
 
     test "init/1 returns {:ok, state}" do

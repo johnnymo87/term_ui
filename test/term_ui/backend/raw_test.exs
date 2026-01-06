@@ -9,6 +9,7 @@ defmodule TermUI.Backend.RawTest do
   use ExUnit.Case, async: true
 
   alias TermUI.Backend.Raw
+  import TermUI.Test.AssertionHelpers
 
   describe "module structure" do
     test "module compiles successfully" do
@@ -21,33 +22,33 @@ defmodule TermUI.Backend.RawTest do
     end
 
     test "exports all required callbacks" do
-      # Lifecycle callbacks
-      assert function_exported?(Raw, :init, 1)
-      assert function_exported?(Raw, :shutdown, 1)
-
-      # Query callbacks
-      assert function_exported?(Raw, :size, 1)
-
-      # Cursor callbacks
-      assert function_exported?(Raw, :move_cursor, 2)
-      assert function_exported?(Raw, :hide_cursor, 1)
-      assert function_exported?(Raw, :show_cursor, 1)
-
-      # Rendering callbacks
-      assert function_exported?(Raw, :clear, 1)
-      assert function_exported?(Raw, :draw_cells, 2)
-      assert function_exported?(Raw, :flush, 1)
-
-      # Input callbacks
-      assert function_exported?(Raw, :poll_event, 2)
+      assert_functions_exported(Raw, [
+        # Lifecycle callbacks
+        {:init, 1},
+        {:shutdown, 1},
+        # Query callbacks
+        {:size, 1},
+        # Cursor callbacks
+        {:move_cursor, 2},
+        {:hide_cursor, 1},
+        {:show_cursor, 1},
+        # Rendering callbacks
+        {:clear, 1},
+        {:draw_cells, 2},
+        {:flush, 1},
+        # Input callbacks
+        {:poll_event, 2}
+      ])
     end
 
     test "exports helper functions" do
-      assert function_exported?(Raw, :valid_position?, 2)
-      assert function_exported?(Raw, :mouse_mode_to_ansi, 1)
-      assert function_exported?(Raw, :ansi_module, 0)
-      assert function_exported?(Raw, :enable_mouse, 2)
-      assert function_exported?(Raw, :disable_mouse, 1)
+      assert_functions_exported(Raw, [
+        {:valid_position?, 2},
+        {:mouse_mode_to_ansi, 1},
+        {:ansi_module, 0},
+        {:enable_mouse, 2},
+        {:disable_mouse, 1}
+      ])
     end
 
     test "has ANSI module aliased" do
@@ -778,7 +779,7 @@ defmodule TermUI.Backend.RawTest do
     end
 
     test "exports refresh_size/1 function" do
-      assert function_exported?(Raw, :refresh_size, 1)
+      assert_function_exported(Raw, :refresh_size, 1)
     end
 
     test "returns 3-tuple on success", %{state: state} do
@@ -929,7 +930,7 @@ defmodule TermUI.Backend.RawTest do
     end
 
     test "exports draw_cells/2 function" do
-      assert function_exported?(Raw, :draw_cells, 2)
+      assert_function_exported(Raw, :draw_cells, 2)
     end
 
     test "returns {:ok, state} tuple", %{state: state} do
