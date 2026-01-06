@@ -214,23 +214,52 @@ defmodule TermUI.Backend.Selector do
     end
   end
 
-  @doc false
-  @spec detect_capabilities() :: capabilities()
-  def detect_capabilities do
+  @doc """
+  Detects terminal capabilities from environment.
+
+  ## Options
+
+  - `env` - Optional map of environment variables to use instead of `System.get_env/1`.
+    Useful for testing capability detection without modifying global state.
+
+  ## Examples
+
+      # Use system environment (default)
+      detect_capabilities()
+
+      # Use custom environment (for testing)
+      detect_capabilities(%{"COLORTERM" => "truecolor", "TERM" => "xterm"})
+  """
+  @spec detect_capabilities(map() | nil) :: capabilities()
+  def detect_capabilities(env \\ nil) do
+    env = env || system_env()
+
     %{
-      colors: detect_color_depth(),
-      unicode: detect_unicode_support(),
+      colors: detect_color_depth(env),
+      unicode: detect_unicode_support(env),
       dimensions: detect_dimensions(),
       terminal: detect_terminal_presence()
     }
   end
 
+  # Gets all relevant environment variables for capability detection.
+  # Separated for easier testing and mocking.
+  defp system_env do
+    %{
+      "COLORTERM" => System.get_env("COLORTERM"),
+      "TERM" => System.get_env("TERM"),
+      "LANG" => System.get_env("LANG"),
+      "LC_ALL" => System.get_env("LC_ALL"),
+      "LC_CTYPE" => System.get_env("LC_CTYPE")
+    }
+  end
+
   # Detects color depth from environment variables
   # Priority: $COLORTERM > $TERM patterns > monochrome fallback
-  @spec detect_color_depth() :: color_depth()
-  defp detect_color_depth do
-    colorterm = System.get_env("COLORTERM") || ""
-    term = System.get_env("TERM") || ""
+  @spec detect_color_depth(map()) :: color_depth()
+  defp detect_color_depth(env) do
+    colorterm = env["COLORTERM"] || ""
+    term = env["TERM"] || ""
 
     cond do
       # COLORTERM is the most reliable indicator for true color
@@ -264,12 +293,12 @@ defmodule TermUI.Backend.Selector do
     end)
   end
 
-  # Detects Unicode support from $LANG environment variable
-  @spec detect_unicode_support() :: boolean()
-  defp detect_unicode_support do
-    lang = System.get_env("LANG") || ""
-    lc_all = System.get_env("LC_ALL") || ""
-    lc_ctype = System.get_env("LC_CTYPE") || ""
+  # Detects Unicode support from locale environment variables
+  @spec detect_unicode_support(map()) :: boolean()
+  defp detect_unicode_support(env) do
+    lang = env["LANG"] || ""
+    lc_all = env["LC_ALL"] || ""
+    lc_ctype = env["LC_CTYPE"] || ""
 
     # Check all locale variables, prioritizing LC_ALL > LC_CTYPE > LANG
     locale =

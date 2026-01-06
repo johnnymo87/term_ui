@@ -377,57 +377,43 @@ defmodule TermUI.Backend.SelectorTest do
   end
 
   describe "color depth detection" do
-    # These tests verify the color detection logic using environment manipulation
-    # Uses with_env/2 helper for environment isolation
+    # These tests verify the color detection logic using env injection
+    # No global state mutation - tests are safe for async: true
 
     test "detects true_color from COLORTERM=truecolor" do
-      with_env(%{"COLORTERM" => "truecolor"}, fn ->
-        caps = Selector.detect_capabilities()
-        assert caps.colors == :true_color
-      end)
+      caps = Selector.detect_capabilities(%{"COLORTERM" => "truecolor"})
+      assert caps.colors == :true_color
     end
 
     test "detects true_color from COLORTERM=24bit" do
-      with_env(%{"COLORTERM" => "24bit"}, fn ->
-        caps = Selector.detect_capabilities()
-        assert caps.colors == :true_color
-      end)
+      caps = Selector.detect_capabilities(%{"COLORTERM" => "24bit"})
+      assert caps.colors == :true_color
     end
 
     test "detects color_256 from TERM containing -256color" do
-      with_env(%{"COLORTERM" => nil, "TERM" => "xterm-256color"}, fn ->
-        caps = Selector.detect_capabilities()
-        assert caps.colors == :color_256
-      end)
+      caps = Selector.detect_capabilities(%{"COLORTERM" => nil, "TERM" => "xterm-256color"})
+      assert caps.colors == :color_256
     end
 
     test "detects true_color from TERM containing -direct" do
-      with_env(%{"COLORTERM" => nil, "TERM" => "xterm-direct"}, fn ->
-        caps = Selector.detect_capabilities()
-        assert caps.colors == :true_color
-      end)
+      caps = Selector.detect_capabilities(%{"COLORTERM" => nil, "TERM" => "xterm-direct"})
+      assert caps.colors == :true_color
     end
 
     test "detects color_16 from basic terminal TERM" do
-      with_env(%{"COLORTERM" => nil, "TERM" => "xterm"}, fn ->
-        caps = Selector.detect_capabilities()
-        assert caps.colors == :color_16
-      end)
+      caps = Selector.detect_capabilities(%{"COLORTERM" => nil, "TERM" => "xterm"})
+      assert caps.colors == :color_16
     end
 
     test "falls back to monochrome when TERM is empty" do
-      with_env(%{"COLORTERM" => nil, "TERM" => nil}, fn ->
-        caps = Selector.detect_capabilities()
-        assert caps.colors == :monochrome
-      end)
+      caps = Selector.detect_capabilities(%{"COLORTERM" => nil, "TERM" => nil})
+      assert caps.colors == :monochrome
     end
 
     test "COLORTERM takes priority over TERM" do
       # Even with xterm (which would be color_16), truecolor COLORTERM wins
-      with_env(%{"COLORTERM" => "truecolor", "TERM" => "xterm"}, fn ->
-        caps = Selector.detect_capabilities()
-        assert caps.colors == :true_color
-      end)
+      caps = Selector.detect_capabilities(%{"COLORTERM" => "truecolor", "TERM" => "xterm"})
+      assert caps.colors == :true_color
     end
   end
 
@@ -438,12 +424,10 @@ defmodule TermUI.Backend.SelectorTest do
 
     test "detects all supported basic terminal types" do
       for terminal <- @basic_terminals do
-        with_env(%{"COLORTERM" => nil, "TERM" => terminal}, fn ->
-          caps = Selector.detect_capabilities()
+        caps = Selector.detect_capabilities(%{"COLORTERM" => nil, "TERM" => terminal})
 
-          assert caps.colors == :color_16,
-                 "Expected #{terminal} to be detected as color_16, got #{caps.colors}"
-        end)
+        assert caps.colors == :color_16,
+               "Expected #{terminal} to be detected as color_16, got #{caps.colors}"
       end
     end
 
@@ -458,12 +442,10 @@ defmodule TermUI.Backend.SelectorTest do
       ]
 
       for {terminal, expected} <- test_cases do
-        with_env(%{"COLORTERM" => nil, "TERM" => terminal}, fn ->
-          caps = Selector.detect_capabilities()
+        caps = Selector.detect_capabilities(%{"COLORTERM" => nil, "TERM" => terminal})
 
-          assert caps.colors == expected,
-                 "Expected #{terminal} to be detected as #{expected}, got #{caps.colors}"
-        end)
+        assert caps.colors == expected,
+               "Expected #{terminal} to be detected as #{expected}, got #{caps.colors}"
       end
     end
 
@@ -476,12 +458,10 @@ defmodule TermUI.Backend.SelectorTest do
       ]
 
       for terminal <- test_cases do
-        with_env(%{"COLORTERM" => nil, "TERM" => terminal}, fn ->
-          caps = Selector.detect_capabilities()
+        caps = Selector.detect_capabilities(%{"COLORTERM" => nil, "TERM" => terminal})
 
-          assert caps.colors == :color_16,
-                 "Expected #{terminal} to be detected as color_16, got #{caps.colors}"
-        end)
+        assert caps.colors == :color_16,
+               "Expected #{terminal} to be detected as color_16, got #{caps.colors}"
       end
     end
 
@@ -489,67 +469,51 @@ defmodule TermUI.Backend.SelectorTest do
       unknown_terminals = ["dumb", "unknown", "weird-terminal", ""]
 
       for terminal <- unknown_terminals do
-        with_env(%{"COLORTERM" => nil, "TERM" => terminal}, fn ->
-          caps = Selector.detect_capabilities()
+        caps = Selector.detect_capabilities(%{"COLORTERM" => nil, "TERM" => terminal})
 
-          assert caps.colors == :monochrome,
-                 "Expected #{inspect(terminal)} to be detected as monochrome, got #{caps.colors}"
-        end)
+        assert caps.colors == :monochrome,
+               "Expected #{inspect(terminal)} to be detected as monochrome, got #{caps.colors}"
       end
     end
   end
 
   describe "unicode detection" do
-    # Uses with_env/2 helper for environment isolation
+    # Uses env injection - no global state mutation, safe for async: true
 
     test "detects unicode from LANG containing UTF-8" do
-      with_env(%{"LC_ALL" => nil, "LC_CTYPE" => nil, "LANG" => "en_US.UTF-8"}, fn ->
-        caps = Selector.detect_capabilities()
-        assert caps.unicode == true
-      end)
+      caps = Selector.detect_capabilities(%{"LC_ALL" => nil, "LC_CTYPE" => nil, "LANG" => "en_US.UTF-8"})
+      assert caps.unicode == true
     end
 
     test "detects unicode from LC_ALL taking priority over LANG" do
-      with_env(%{"LC_ALL" => "en_US.UTF-8", "LC_CTYPE" => nil, "LANG" => "C"}, fn ->
-        caps = Selector.detect_capabilities()
-        assert caps.unicode == true
-      end)
+      caps = Selector.detect_capabilities(%{"LC_ALL" => "en_US.UTF-8", "LC_CTYPE" => nil, "LANG" => "C"})
+      assert caps.unicode == true
     end
 
     test "detects unicode from LC_CTYPE taking priority over LANG" do
-      with_env(%{"LC_ALL" => nil, "LC_CTYPE" => "en_US.UTF-8", "LANG" => "C"}, fn ->
-        caps = Selector.detect_capabilities()
-        assert caps.unicode == true
-      end)
+      caps = Selector.detect_capabilities(%{"LC_ALL" => nil, "LC_CTYPE" => "en_US.UTF-8", "LANG" => "C"})
+      assert caps.unicode == true
     end
 
     test "LC_ALL takes priority over LC_CTYPE" do
-      with_env(%{"LC_ALL" => "en_US.UTF-8", "LC_CTYPE" => "C", "LANG" => "C"}, fn ->
-        caps = Selector.detect_capabilities()
-        assert caps.unicode == true
-      end)
+      caps = Selector.detect_capabilities(%{"LC_ALL" => "en_US.UTF-8", "LC_CTYPE" => "C", "LANG" => "C"})
+      assert caps.unicode == true
     end
 
     test "returns false when no UTF locale is set" do
-      with_env(%{"LC_ALL" => nil, "LC_CTYPE" => nil, "LANG" => "C"}, fn ->
-        caps = Selector.detect_capabilities()
-        assert caps.unicode == false
-      end)
+      caps = Selector.detect_capabilities(%{"LC_ALL" => nil, "LC_CTYPE" => nil, "LANG" => "C"})
+      assert caps.unicode == false
     end
 
     test "handles case-insensitive UTF-8 detection" do
       # Some systems use lowercase utf-8
-      with_env(%{"LC_ALL" => nil, "LC_CTYPE" => nil, "LANG" => "en_US.utf-8"}, fn ->
-        caps = Selector.detect_capabilities()
-        assert caps.unicode == true
-      end)
+      caps = Selector.detect_capabilities(%{"LC_ALL" => nil, "LC_CTYPE" => nil, "LANG" => "en_US.utf-8"})
+      assert caps.unicode == true
     end
 
     test "handles UTF8 without hyphen" do
-      with_env(%{"LC_ALL" => nil, "LC_CTYPE" => nil, "LANG" => "en_US.UTF8"}, fn ->
-        caps = Selector.detect_capabilities()
-        assert caps.unicode == true
-      end)
+      caps = Selector.detect_capabilities(%{"LC_ALL" => nil, "LC_CTYPE" => nil, "LANG" => "en_US.UTF8"})
+      assert caps.unicode == true
     end
   end
 
